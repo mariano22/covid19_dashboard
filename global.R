@@ -7,9 +7,14 @@ library("plotly")
 library("DT")
 library("fs")
 library("wbstats")
-library(reticulate)
 
-source_python("backend.py")
+# COMMENTS THESE 3 LINES BELOW FOR LOCAL DEPLOYMENTS
+reticulate::virtualenv_create("python35_env", python = "python3")
+reticulate::virtualenv_install("python35_env", packages = c("pandas", "requests", "numpy", "lxml", "unicodecsv"), ignore_installed = TRUE)
+reticulate::use_virtualenv('python35_env', required = TRUE)
+
+reticulate::source_python("backend.py")
+
 source("utils.R", local = T)
 
 updateData <- function() {
