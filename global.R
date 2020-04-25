@@ -9,6 +9,9 @@ library("fs")
 library("wbstats")
 
 # COMMENTS THESE 3 LINES BELOW FOR LOCAL DEPLOYMENTS
+# ATTENTION: IF SHINY DEPLOY FAIL RUN LOCALLY COMMANDS BELOW
+# install.packages("remotes")
+# remotes::install_github("rstudio/reticulate")
 reticulate::virtualenv_create("python35_env", python = "python3")
 reticulate::virtualenv_install("python35_env", packages = c("pandas", "requests", "numpy", "lxml", "unicodecsv"), ignore_installed = TRUE)
 reticulate::use_virtualenv('python35_env', required = TRUE)
