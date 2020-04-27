@@ -15,9 +15,18 @@ body_overview <- dashboardBody(
     fluidRow(
       class = "details",
       column(
-        box(
-          width = 12,
-          leafletOutput("overview_map")
+        tabBox(
+            tabPanel("Por provincias",
+                box(
+                  width = 12,
+                  leafletOutput("overview_map")
+              )),
+            tabPanel("Por localidad",
+                box(
+                  width = 12,
+                  leafletOutput("overview_map_santa_fe")
+              )),
+            width = 12
         ),
         class = "map",
         width = 6,
@@ -34,7 +43,7 @@ body_overview <- dashboardBody(
           "timeSlider",
           label      = "Seleccionar fecha",
           min        = min(data_evolution$date),
-          max        = max(data_evolution$date), 
+          max        = max(data_evolution$date),
           value      = max(data_evolution$date),
           width      = "100%",
           timeFormat = "%d.%m.%Y",

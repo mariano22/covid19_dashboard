@@ -50,6 +50,11 @@ def _load_SantaFe_data(csv_fp):
     df_safe = pd.read_csv(csv_fp)
     df_safe['LOCATION'] = df_safe.apply(_set_location_safe, axis=1)
     df_safe = df_safe[ (df_safe['TYPE']=='CONFIRMADOS') &  (df_safe['DEPARTMENT']!='##TOTAL') ]
+    df_safe['LOCATION'] = df_safe['LOCATION'].replace({
+        'ARGENTINA/SANTA FE/IRIONDO/CLASSON':'ARGENTINA/SANTA FE/IRIONDO/CLASON',
+        'ARGENTINA/SANTA FE/ROSARIO/VILLA GOB. GALVEZ':'ARGENTINA/SANTA FE/ROSARIO/VILLA GOBERNADOR GALVEZ',
+        'ARGENTINA/SANTA FE/SAN LORENZO/PUERTO GRAL. SAN MARTIN': 'ARGENTINA/SANTA FE/SAN LORENZO/PUERTO GENERAL SAN MARTIN',
+    })
     df_safe = df_safe.drop(columns=['DEPARTMENT', 'PLACE'])
     df_safe = df_safe.set_index(['TYPE','LOCATION'])
     df_safe = df_safe.rename(columns=lambda colname: pd.to_datetime(colname,format='%d/%m/%Y'))
@@ -169,7 +174,7 @@ def backend_data_at_date(date):
     global _global_status
     return _global_status['time_series'][date].swaplevel(0,1).unstack()
 
-def backend_filter_location_by_level(df, level):
+def backend_filter_location_by_level(df, level, extract_name=True):
     if level=='LEAF':
         have_childs = set(df['LOCATION'].apply(lambda l : os.path.dirname(l)))
         df = df[ df['LOCATION'].apply(lambda l : l not in have_childs) ]
@@ -181,5 +186,6 @@ def backend_filter_location_by_level(df, level):
         if type(level)==str:
             level = to_level_map[level]
         df = df[ df['LOCATION'].apply(lambda l : l.count('/')) == level ]
-    df['LOCATION'] = df['LOCATION'].apply(lambda l : os.path.basename(l))
+    if extract_name:
+        df['LOCATION'] = df['LOCATION'].apply(lambda l : os.path.basename(l))
     return df

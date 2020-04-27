@@ -1,6 +1,7 @@
 library("htmltools")
 
 addLabel <- function(data) {
+  if (dim(data)[1]==0) return(data)
   data$label <- paste0(
     '<b>', ifelse(is.na(data$`Province/State`), data$`Country/Region`, data$`Province/State`), '</b><br>
     <table style="width:120px;">
@@ -11,7 +12,7 @@ addLabel <- function(data) {
     </table>'
   )
   data$label <- lapply(data$label, HTML)
-  
+
   return(data)
 }
 
@@ -43,6 +44,7 @@ observe({
   data                    <- data_atDate(input$timeSlider) %>% addLabel()
   data$confirmedPerCapita <- data$confirmed / data$population * 100000
   data$activePerCapita    <- data$active / data$population * 100000
+  if (dim(data)[1]==0) return()
   k <- 50
   leafletProxy("overview_map", data = data) %>%
     clearMarkers() %>%
@@ -114,5 +116,3 @@ observe({
 })
 
 output$overview_map <- renderLeaflet(map)
-
-

@@ -19,14 +19,16 @@ provinces_data_at_date <- function(date_argument) {
     global_time_series_melt %>%
     filter(date == date_argument & CONFIRMADOS>0) %>%
     backend_filter_location_by_level(1) %>%
+    mutate(CONFIRMADOS_PER100K = round(CONFIRMADOS_PER100K,2)) %>%
+    mutate(MUERTOS_PER100K = round(MUERTOS_PER100K,2)) %>%
     rename("Provincias" = "LOCATION",
            "Confirmados" = "CONFIRMADOS",
-           "Confirmados x 100K hab." = "CONFIRMADOS_PER100K",
+           "Confirmados/100K hab" = "CONFIRMADOS_PER100K",
            "Recuperados" = "RECUPERADOS",
            "Fallecidos" = "MUERTOS",
-           "Fallecidos x 100K hab." = "MUERTOS_PER100K",
+           "Fallecidos/100K hab" = "MUERTOS_PER100K",
            "Activos" = "ACTIVOS") %>%
-    .[,c("Provincias","Confirmados", "Confirmados x 100K hab.", "Recuperados", "Fallecidos", "Fallecidos x 100K hab.", "Activos")]
+    .[,c("Provincias","Confirmados", "Confirmados/100K hab", "Recuperados", "Fallecidos", "Fallecidos/100K hab", "Activos")]
 }
 
 to_DataTable <- function(df) {

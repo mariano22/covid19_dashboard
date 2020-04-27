@@ -1,6 +1,7 @@
 library("htmltools")
 
 addLabel <- function(data) {
+  if (dim(data)[1]==0) return(data)
   data$label <- paste0(
     '<b>', data$LOCATION, '</b><br>
     <table style="width:120px;">
