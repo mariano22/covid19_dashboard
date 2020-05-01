@@ -4,23 +4,32 @@ import time
 import os
 import datetime
 import math
+import requests
 
 def normalize_str(s):
     """ Function for name normalization (handle áéíóú). """
     return unicodedata.normalize("NFKD", s).encode("ascii","ignore").decode("ascii").upper()
 
-CSVS_TO_DOWNLOAD = {
+FILES_TO_DOWNLOAD = {
     'Argentina_Provinces.csv': 'https://raw.githubusercontent.com/mariano22/argcovidapi/master/csvs/Argentina_Provinces.csv',
     'SantaFe_AllData.csv': 'https://raw.githubusercontent.com/mariano22/argcovidapi/master/csvs/SantaFe_AllData.csv',
 }
 DATA_DIR = './data/'
 
+def _download_file(url, out_file):
+    response = requests.get(url)
+    assert response.status_code == 200,\
+        'Wrong status code at dowloading {}'.format(out_file)
+    f = open(out_file, "wb")
+    f.write(response.content)
+    f.close()
+
 def _download_expired_data():
-    for csv_fn, csv_remote_fp in CSVS_TO_DOWNLOAD.items():
+    for csv_fn, csv_remote_fp in FILES_TO_DOWNLOAD.items():
         csv_fp = os.path.join(DATA_DIR, csv_fn)
         if (not os.path.isfile(csv_fp)) or (time.time()-os.stat(csv_fp).st_mtime>30*60):
             print('Downloading',csv_fn)
-            pd.read_csv(csv_remote_fp).to_csv(csv_fp,index=False)
+            _download_file(csv_remote_fp, csv_fp)
 
 def _load_National_data(csv_fp):
     df_arg = pd.read_csv(csv_fp)
@@ -148,7 +157,7 @@ def _soon_deprecated_data(df_time_series, df_info):
     return df
 
 def _calculate_global_status():
-    df_geoinfo =  pd.read_csv(os.path.join(DATA_DIR, 'info_arg.csv'))
+    df_geoinfo =  pd.read_csv(os.path.join(DATA_DIR, 'info_general.csv'))
     df_time_series =_load_data_time_series(df_geoinfo).reset_index()
     df_time_series_melt = _time_series_melt(df_time_series,df_geoinfo)
     return {

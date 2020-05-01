@@ -1,58 +1,53 @@
 getFullTableData <- function(groupBy) {
-  padding_left <- max(str_length(data_evolution$value_new), na.rm = TRUE)
-  data         <- data_evolution %>%
+    padding_left <- max(str_length(global_time_series_melt$CONFIRMADOS_DIFF), na.rm = TRUE)
+
+    global_time_series_melt %>%
     filter(date == current_date) %>%
-    pivot_wider(names_from = var, values_from = c(value, value_new)) %>%
-    select(-date, -Lat, -Long) %>%
-    # add_row(
-    #   "Country/Region"      = "",
-    #   "population"          = 46000000,
-    #   "value_confirmed"     = sum(.$value_confirmed, na.rm = T),
-    #   "value_new_confirmed" = sum(.$value_new_confirmed, na.rm = T),
-    #   "value_recovered"     = sum(.$value_recovered, na.rm = T),
-    #   "value_new_recovered" = sum(.$value_new_recovered, na.rm = T),
-    #   "value_deceased"      = sum(.$value_deceased, na.rm = T),
-    #   "value_new_deceased"  = sum(.$value_new_deceased, na.rm = T),
-    #   "value_active"        = sum(.$value_active, na.rm = T),
-    #   "value_new_active"    = sum(.$value_new_active, na.rm = T)
-    # ) %>%
-    group_by(!!sym(groupBy), population) %>%
-    summarise(
-      confirmed_total     = sum(value_confirmed, na.rm = T),
-      confirmed_new       = sum(value_new_confirmed, na.rm = T),
-      confirmed_totalNorm = round(sum(value_confirmed, na.rm = T) / max(population, na.rm = T) * 100000, 2),
-      recovered_total     = sum(value_recovered, na.rm = T),
-      recovered_new       = sum(value_new_recovered, na.rm = T),
-      deceased_total      = sum(value_deceased, na.rm = T),
-      deceased_new        = sum(value_new_deceased, na.rm = T),
-      active_total        = sum(value_active, na.rm = T),
-      active_new          = sum(value_new_active, na.rm = T),
-      active_totalNorm    = round(sum(value_active, na.rm = T) / max(population, na.rm = T) * 100000, 2)
-    ) %>%
-    mutate(
-      "confirmed_newPer" = confirmed_new / (confirmed_total - confirmed_new) * 100,
-      "recovered_newPer" = recovered_new / (recovered_total - recovered_new) * 100,
-      "deceased_newPer"  = deceased_new / (deceased_total - deceased_new) * 100,
-      "active_newPer"    = active_new / (active_total - active_new) * 100
-    ) %>%
-    mutate_at(vars(contains('_newPer')), list(~na_if(., Inf))) %>%
-    mutate_at(vars(contains('_newPer')), list(~na_if(., 0))) %>%
-    mutate(
-      confirmed_new = str_c(str_pad(confirmed_new, width = padding_left, side = "left", pad = "0"), "|",
-        confirmed_new, if_else(!is.na(confirmed_newPer), sprintf(" (%+.2f %%)", confirmed_newPer), "")),
-      recovered_new = str_c(str_pad(recovered_new, width = padding_left, side = "left", pad = "0"), "|",
-        recovered_new, if_else(!is.na(recovered_newPer), sprintf(" (%+.2f %%)", recovered_newPer), "")),
-      deceased_new  = str_c(str_pad(deceased_new, width = padding_left, side = "left", pad = "0"), "|",
-        deceased_new, if_else(!is.na(deceased_newPer), sprintf(" (%+.2f %%)", deceased_newPer), "")),
-      active_new    = str_c(str_pad(active_new, width = padding_left, side = "left", pad = "0"), "|",
-        active_new, if_else(!is.na(active_newPer), sprintf(" (%+.2f %%)", active_newPer), ""))
-    ) %>%
-    select(-population) %>%
+    backend_filter_location_by_level(1) %>%
+    mutate(CONFIRMADOS_PER100K = round(CONFIRMADOS_PER100K,2)) %>%
+    mutate(MUERTOS_PER100K = round(MUERTOS_PER100K,2)) %>%
+    mutate(ACTIVOS_PER100K = round(ACTIVOS_PER100K,2)) %>%
+    .[,c("LOCATION",
+         "CONFIRMADOS",
+         "CONFIRMADOS_DIFF",
+         "CONFIRMADOS_PER100K",
+         "RECUPERADOS",
+         "RECUPERADOS_DIFF",
+         "MUERTOS",
+         "MUERTOS_PER100K",
+         "MUERTOS_DIFF",
+         "ACTIVOS",
+         "ACTIVOS_DIFF",
+         "ACTIVOS_PER100K",
+         "CONFIRMADOS_DIFF_RATIO",
+         "RECUPERADOS_DIFF_RATIO",
+         "MUERTOS_DIFF_RATIO",
+         "ACTIVOS_DIFF_RATIO")] %>%
+     mutate(
+       "CONFIRMADOS_DIFF_PER" = CONFIRMADOS_DIFF_RATIO * 100,
+       "RECUPERADOS_DIFF_PER" = RECUPERADOS_DIFF_RATIO * 100,
+       "MUERTOS_DIFF_PER"  = MUERTOS_DIFF_RATIO * 100,
+       "ACTIVOS_DIFF_PER"    = ACTIVOS_DIFF_RATIO * 100
+     ) %>%
+     select(-CONFIRMADOS_DIFF_RATIO, -RECUPERADOS_DIFF_RATIO, -MUERTOS_DIFF_RATIO,
+            -ACTIVOS_DIFF_RATIO) %>%
+     mutate_at(vars(contains('_newPer')), list(~na_if(., Inf))) %>%
+     mutate_at(vars(contains('_newPer')), list(~na_if(., 0))) %>%
+     mutate(
+       CONFIRMADOS_DIFF = str_c(str_pad(CONFIRMADOS_DIFF, width = padding_left, side = "left", pad = "0"), "|",
+         CONFIRMADOS_DIFF, if_else(!is.na(CONFIRMADOS_DIFF_PER), sprintf(" (%+.2f %%)", CONFIRMADOS_DIFF_PER), "")),
+       RECUPERADOS_DIFF = str_c(str_pad(RECUPERADOS_DIFF, width = padding_left, side = "left", pad = "0"), "|",
+         RECUPERADOS_DIFF, if_else(!is.na(RECUPERADOS_DIFF_PER), sprintf(" (%+.2f %%)", RECUPERADOS_DIFF_PER), "")),
+       MUERTOS_DIFF  = str_c(str_pad(MUERTOS_DIFF, width = padding_left, side = "left", pad = "0"), "|",
+         MUERTOS_DIFF, if_else(!is.na(MUERTOS_DIFF_PER), sprintf(" (%+.2f %%)", MUERTOS_DIFF_PER), "")),
+       ACTIVOS_DIFF    = str_c(str_pad(ACTIVOS_DIFF, width = padding_left, side = "left", pad = "0"), "|",
+         ACTIVOS_DIFF, if_else(!is.na(ACTIVOS_DIFF_PER), sprintf(" (%+.2f %%)", ACTIVOS_DIFF_PER), ""))
+     ) %>%
     as.data.frame()
 }
 
 output$fullTable <- renderDataTable({
-  data       <- getFullTableData("Country/Region")
+  data       <- getFullTableData()
   columNames <- c(
     "Provincia",
     "Total Confirmados",
@@ -61,6 +56,7 @@ output$fullTable <- renderDataTable({
     "Total Recuperados",
     "Nuevos Recuperados",
     "Total Fallecidos",
+    "Total Fallecidos <br>(cada 100k)",
     "Nuevos Fallecidos",
     "Total Activos",
     "Nuevos Activos",
@@ -73,7 +69,7 @@ output$fullTable <- renderDataTable({
     selection = "none",
     options   = list(
       pageLength     = -1,
-      order          = list(8, "desc"),
+      order          = list(9, "desc"),
       scrollX        = TRUE,
       scrollY        = "calc(100vh - 250px)",
       scrollCollapse = TRUE,
@@ -81,7 +77,7 @@ output$fullTable <- renderDataTable({
       server         = FALSE,
       columnDefs     = list(
         list(
-          targets = c(2, 5, 7, 9),
+          targets = c(2, 5, 8, 10),
           render  = JS(
             "function(data, type, row, meta) {
               if (data != null) {
@@ -97,35 +93,35 @@ output$fullTable <- renderDataTable({
         ),
         list(className = 'dt-right', targets = 1:ncol(data) - 1),
         list(width = '100px', targets = 0),
-        list(visible = FALSE, targets = 11:14)
+        list(visible = FALSE, targets = 11:15)
       )
     )
   ) %>%
     formatStyle(
-      columns    = "Country/Region",
+      columns    = "LOCATION",
       fontWeight = "bold"
     ) %>%
     formatStyle(
-      columns         = "confirmed_new",
-      valueColumns    = "confirmed_newPer",
+      columns         = "CONFIRMADOS_DIFF",
+      valueColumns    = "CONFIRMADOS_DIFF_PER",
       backgroundColor = styleInterval(c(10, 20, 33, 50, 75), c("NULL", "#FFE5E5", "#FFB2B2", "#FF7F7F", "#FF4C4C", "#983232")),
       color           = styleInterval(75, c("#000000", "#FFFFFF"))
     ) %>%
     formatStyle(
-      columns         = "deceased_new",
-      valueColumns    = "deceased_newPer",
+      columns         = "MUERTOS_DIFF",
+      valueColumns    = "MUERTOS_DIFF_PER",
       backgroundColor = styleInterval(c(10, 20, 33, 50, 75), c("NULL", "#FFE5E5", "#FFB2B2", "#FF7F7F", "#FF4C4C", "#983232")),
       color           = styleInterval(75, c("#000000", "#FFFFFF"))
     ) %>%
     formatStyle(
-      columns         = "active_new",
-      valueColumns    = "active_newPer",
+      columns         = "ACTIVOS_DIFF",
+      valueColumns    = "ACTIVOS_DIFF_PER",
       backgroundColor = styleInterval(c(-33, -20, -10, 10, 20, 33, 50, 75), c("#66B066", "#99CA99", "#CCE4CC", "NULL", "#FFE5E5", "#FFB2B2", "#FF7F7F", "#FF4C4C", "#983232")),
       color           = styleInterval(75, c("#000000", "#FFFFFF"))
     ) %>%
     formatStyle(
-      columns         = "recovered_new",
-      valueColumns    = "recovered_newPer",
+      columns         = "RECUPERADOS_DIFF",
+      valueColumns    = "RECUPERADOS_DIFF_PER",
       backgroundColor = styleInterval(c(10, 20, 33), c("NULL", "#CCE4CC", "#99CA99", "#66B066"))
     )
 })
